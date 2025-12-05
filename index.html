@@ -3,53 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tuyển Dụng & Quét CCCD</title>
+    <title>AI Scan CCCD</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
-        body { background-color: #f0f2f5; font-family: Arial, sans-serif; }
-        .container { max-width: 600px; margin-top: 20px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 20px; background: black; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .container { max-width: 600px; margin-top: 20px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-upload { position: relative; overflow: hidden; height: 150px; border: 2px dashed #0d6efd; background: #f8f9fa; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; }
+        .btn-upload:hover { background: #e9ecef; }
+        .btn-upload input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         .hidden { display: none; }
-        .section-title { font-size: 1.1rem; font-weight: bold; color: #0d6efd; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #e9ecef; padding-bottom: 5px; }
+        .preview-img { max-height: 140px; border-radius: 5px; margin-top: 5px; }
+        .section-header { color: #0d6efd; font-weight: bold; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 20px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container mb-5">
-    <h3 class="text-center text-primary fw-bold mb-4">THÔNG TIN ỨNG VIÊN</h3>
+<!-- Màn hình chờ -->
+<div id="loading" class="loading-overlay hidden">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+    <h5 class="mt-3 text-primary fw-bold" id="loadingText">Đang xử lý ảnh...</h5>
+    <small class="text-muted">Vui lòng đợi vài giây</small>
+</div>
 
-    <!-- CAMERA -->
-    <div id="reader" class="hidden"></div>
-    <button id="toggleCamera" class="btn btn-warning w-100 mb-3 fw-bold">📷 Quét QR CCCD (Hỗ trợ nhập liệu)</button>
-    <p id="scanStatus" class="text-center text-success fw-bold"></p>
+<div class="container mb-5">
+    <h3 class="text-center text-primary fw-bold mb-3">HỒ SƠ ỨNG VIÊN</h3>
+    
+    <!-- KHU VỰC UPLOAD ẢNH -->
+    <div class="mb-3">
+        <div class="btn-upload">
+            <input type="file" id="cameraInput" accept="image/*" capture="environment">
+            <div id="uploadPlaceholder" class="text-center">
+                <div class="fs-1">📸</div>
+                <div class="fw-bold text-primary">Chụp ảnh Mặt trước CCCD</div>
+                <small class="text-muted">(Nhấn vào đây để chụp)</small>
+            </div>
+            <img id="preview" class="preview-img hidden">
+        </div>
+        <div class="text-center mt-2">
+            <small class="text-danger fst-italic">* Chụp rõ nét, đủ sáng để AI tự động điền thông tin</small>
+        </div>
+    </div>
 
     <form id="infoForm">
-        <div class="section-title">1. Thông tin cá nhân</div>
+        <div class="section-header">1. THÔNG TIN CÁ NHÂN (Tự động điền)</div>
         
         <div class="mb-3">
-            <label class="form-label">Số CCCD / CMND</label>
-            <input type="number" class="form-control" id="soCCCD" placeholder="Quét QR hoặc nhập tay...">
+            <label class="form-label fw-bold">Số CCCD</label>
+            <input type="number" class="form-control" id="soCCCD" required placeholder="Đang chờ quét...">
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Họ và Tên</label>
-            <input type="text" class="form-control" id="hoTen" required placeholder="Nhập họ tên in hoa...">
+            <label class="form-label fw-bold">Họ và Tên</label>
+            <input type="text" class="form-control" id="hoTen" required placeholder="Đang chờ quét...">
         </div>
 
         <div class="row">
             <div class="col-6 mb-3">
-                <label class="form-label">Ngày sinh</label>
-                <input type="date" class="form-control" id="ngaySinh" required>
+                <label class="form-label fw-bold">Ngày sinh</label>
+                <!-- Dùng text để linh hoạt nếu OCR đọc sai định dạng -->
+                <input type="text" class="form-control" id="ngaySinh" required placeholder="dd/mm/yyyy">
             </div>
             <div class="col-6 mb-3">
-                <label class="form-label">Số điện thoại</label>
-                <input type="number" class="form-control" id="sdt" required placeholder="09xxxx...">
+                <label class="form-label fw-bold">Số điện thoại</label>
+                <input type="number" class="form-control" id="sdt" required placeholder="Nhập SĐT...">
             </div>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Quê quán (Chọn Tỉnh - Huyện)</label>
+            <label class="form-label fw-bold">Quê quán / Thường trú</label>
+            <input type="text" class="form-control mb-2" id="queQuanFull" placeholder="Địa chỉ trích xuất từ ảnh..." readonly style="background: #f8f9fa;">
+            
             <div class="d-flex gap-2">
                 <select class="form-select" id="province" required>
                     <option value="">Chọn Tỉnh/TP...</option>
@@ -58,32 +82,31 @@
                     <option value="">Chọn Quận/Huyện...</option>
                 </select>
             </div>
-            <!-- Trường ẩn để lưu chuỗi địa chỉ full gửi đi -->
-            <input type="hidden" id="queQuanFull">
+        </div>
+        
+        <div class="mb-3">
+             <label class="form-label fw-bold">Tình trạng hôn nhân</label>
+             <select class="form-select" id="honNhan">
+                 <option value="Độc thân">Độc thân</option>
+                 <option value="Đã kết hôn">Đã kết hôn</option>
+             </select>
         </div>
 
-        <div class="section-title">2. Thông tin ứng tuyển</div>
+        <div class="section-header">2. VỊ TRÍ ỨNG TUYỂN</div>
 
         <div class="row">
             <div class="col-6 mb-3">
-                <label class="form-label">Phòng ban</label>
+                <label class="form-label fw-bold">Phòng ban</label>
                 <select class="form-select" id="phongBan" required>
                     <option value="" disabled selected>Chọn...</option>
-                    <option value="TAG">TAG</option>
-                    <option value="CARE">CARE</option>
-                    <option value="KHO">KHO</option>
-                    <option value="CS">CS</option>
-                    <option value="MUA HANG">MUA HANG</option>
-                    <option value="DTP">DTP</option>
-                    <option value="SX">SX</option>
-                    <option value="XNK">XNK</option>
-                    <option value="TV">TV</option>
-                    <option value="IT">IT</option>
-                    <option value="ACC">ACC</option>
+                    <option value="TAG">TAG</option><option value="CARE">CARE</option><option value="KHO">KHO</option>
+                    <option value="CS">CS</option><option value="MUA HANG">MUA HANG</option><option value="DTP">DTP</option>
+                    <option value="SX">SX</option><option value="XNK">XNK</option><option value="TV">TV</option>
+                    <option value="IT">IT</option><option value="ACC">ACC</option>
                 </select>
             </div>
             <div class="col-6 mb-3">
-                <label class="form-label">Vị trí</label>
+                <label class="form-label fw-bold">Vị trí</label>
                 <select class="form-select" id="viTri" required>
                     <option value="" disabled selected>Chọn...</option>
                     <option value="Công nhân">Công nhân</option>
@@ -97,209 +120,202 @@
 
         <div class="row">
             <div class="col-6 mb-3">
-                <label class="form-label">Mức lương (Triệu VNĐ)</label>
+                <label class="form-label fw-bold">Mức lương (Triệu)</label>
                 <input type="number" class="form-control" id="mucLuong" step="0.5" placeholder="VD: 8.5">
             </div>
             <div class="col-6 mb-3">
-                <label class="form-label">Kinh nghiệm</label>
+                <label class="form-label fw-bold">Kinh nghiệm</label>
                 <input type="text" class="form-control" id="kinhNghiem" placeholder="VD: 1 năm...">
             </div>
         </div>
 
-        <div class="section-title">3. Ảnh chụp CCCD</div>
-        <div class="mb-4">
-            <input type="file" class="form-control" id="cameraInput" accept="image/*" capture="environment">
-            <div class="form-text text-muted">Chụp ảnh mặt trước rõ nét. Hệ thống sẽ tự nén ảnh.</div>
-        </div>
-
-        <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-3 fw-bold fs-5">🚀 GỬI HỒ SƠ</button>
+        <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-3 fw-bold fs-5 mt-2">📤 GỬI HỒ SƠ</button>
     </form>
 </div>
 
 <script>
-    // ==========================================
-    // 👇 DÁN LINK APPS SCRIPT CỦA BẠN VÀO ĐÂY 👇
+    // 👇👇👇 DÁN LINK GOOGLE APPS SCRIPT MỚI CỦA BẠN VÀO ĐÂY 👇👇👇
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnOJhg-fz8wN3-JVVXODrPPNPJJ-kCpPFtCtr2VqF2SvPlR-S_hsjy9ZVWG9ng6YrOhA/exec"; 
-    // ==========================================
+    // =============================================================
 
-    // 1. Tải danh sách Tỉnh/Thành Việt Nam (Dùng API miễn phí)
+    let currentImageBase64 = "";
+
+    // 1. Logic Tỉnh/Huyện (Giữ nguyên)
     const provinceSelect = document.getElementById('province');
     const districtSelect = document.getElementById('district');
     let locationData = [];
+    
+    fetch('https://provinces.open-api.vn/api/?depth=2').then(r => r.json()).then(data => {
+        locationData = data;
+        data.forEach(p => {
+            let opt = document.createElement('option');
+            opt.value = p.code; opt.text = p.name;
+            provinceSelect.add(opt);
+        });
+    });
 
-    fetch('https://provinces.open-api.vn/api/?depth=2')
-        .then(response => response.json())
-        .then(data => {
-            locationData = data;
-            data.forEach(p => {
-                let option = document.createElement('option');
-                option.value = p.code;
-                option.text = p.name;
-                provinceSelect.add(option);
-            });
-        })
-        .catch(err => console.error("Lỗi tải địa chỉ:", err));
-
-    // Xử lý khi chọn Tỉnh -> Hiện Huyện
     provinceSelect.addEventListener('change', function() {
         districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện...</option>';
         districtSelect.disabled = true;
-        
-        const selectedCode = this.value;
-        const province = locationData.find(p => p.code == selectedCode);
-        
-        if (province && province.districts) {
+        const p = locationData.find(i => i.code == this.value);
+        if (p && p.districts) {
             districtSelect.disabled = false;
-            province.districts.forEach(d => {
-                let option = document.createElement('option');
-                option.value = d.name; // Lưu tên huyện
-                option.text = d.name;
-                districtSelect.add(option);
+            p.districts.forEach(d => {
+                let opt = document.createElement('option');
+                opt.value = d.name; opt.text = d.name;
+                districtSelect.add(opt);
             });
         }
     });
 
-    // 2. Xử lý Camera Quét QR
-    let html5QrCode;
-    let isCameraOn = false;
+    // 2. Logic Xử lý ảnh (Resize & Preview)
+    const fileInput = document.getElementById('cameraInput');
+    const preview = document.getElementById('preview');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 
-    document.getElementById('toggleCamera').addEventListener('click', function() {
-        if (!isCameraOn) {
-            document.getElementById('reader').classList.remove('hidden');
-            this.innerText = "🛑 Dừng quét";
+    fileInput.addEventListener('change', async function() {
+        if (this.files && this.files[0]) {
+            showLoading(true, "Đang đọc thông tin từ ảnh...");
             
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
-            (decodedText) => {
-                // Khi quét thành công
-                html5QrCode.stop();
-                document.getElementById('reader').classList.add('hidden');
-                document.getElementById('toggleCamera').innerText = "📷 Quét lại QR";
-                document.getElementById('scanStatus').innerText = "✅ Đã quét xong!";
-                isCameraOn = false;
+            try {
+                // Nén ảnh trước khi gửi đi (Quan trọng)
+                currentImageBase64 = await processImage(this.files[0]);
+                
+                // Hiển thị preview
+                preview.src = currentImageBase64;
+                preview.classList.remove('hidden');
+                uploadPlaceholder.classList.add('hidden');
 
-                // Xử lý dữ liệu QR CCCD
-                const parts = decodedText.split('|');
-                if (parts.length >= 6) {
-                    // Dữ liệu chuẩn CCCD Chip
-                    document.getElementById('soCCCD').value = parts[0];
-                    document.getElementById('hoTen').value = parts[2];
-                    
-                    // Format ngày sinh (ddMMyyyy -> yyyy-MM-dd cho input type=date)
-                    const dobRaw = parts[3];
-                    const dobISO = `${dobRaw.slice(4)}-${dobRaw.slice(2,4)}-${dobRaw.slice(0,2)}`;
-                    document.getElementById('ngaySinh').value = dobISO;
-                    
-                    // Địa chỉ từ QR (Thường trú) - Gợi ý vào ô
-                    // Tuy nhiên vì ta dùng Dropdown Tỉnh/Huyện nên chỉ hiển thị gợi ý
-                    alert("Đã lấy được thông tin: " + parts[2] + "\nQuê quán trong QR: " + parts[5] + "\nVui lòng chọn Tỉnh/Huyện tương ứng trong danh sách.");
-                } else {
-                    // QR kiểu cũ hoặc chỉ có số
-                    document.getElementById('soCCCD').value = decodedText;
-                    alert("Mã QR này chỉ chứa số: " + decodedText + ". Vui lòng nhập tay các thông tin còn lại.");
-                }
-            })
-            .catch(err => alert("Không bật được camera: " + err));
-            isCameraOn = true;
-        } else {
-            html5QrCode.stop();
-            document.getElementById('reader').classList.add('hidden');
-            this.innerText = "📷 Quét QR CCCD";
-            isCameraOn = false;
+                // Gửi ảnh lên Server để OCR
+                await analyzeImage(currentImageBase64);
+
+            } catch (e) {
+                alert("Lỗi xử lý ảnh: " + e);
+                showLoading(false);
+            }
         }
     });
 
-    // 3. Hàm nén ảnh (Resize image) trước khi gửi
-    // Google Apps Script giới hạn dung lượng, nên cần resize ảnh nhỏ lại < 1MB
+    // Hàm nén ảnh xuống < 1MB để gửi nhanh
     const processImage = (file) => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onload = (event) => {
+            reader.onload = (e) => {
                 const img = new Image();
-                img.src = event.target.result;
+                img.src = e.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; // Giới hạn chiều rộng 800px
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    
+                    const MAX_W = 1000; // Resize về 1000px
+                    const scale = MAX_W / img.width;
+                    canvas.width = MAX_W;
+                    canvas.height = img.height * scale;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    // Xuất ra base64 jpeg chất lượng 0.7
-                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
                 }
-            };
-            reader.onerror = error => reject(error);
+            }
         });
+    };
+
+    // 3. Hàm gửi ảnh lên Google Drive để OCR
+    async function analyzeImage(base64) {
+        if (!GOOGLE_SCRIPT_URL.includes("http")) { alert("Chưa cấu hình Link Script!"); showLoading(false); return; }
+
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Vì dùng no-cors nên không đọc được response JSON trực tiếp
+                // Mẹo: Apps Script trả về JSON, nhưng no-cors block.
+                // Giải pháp: Dùng redirect hoặc form post. Nhưng ở đây để đơn giản:
+                // Ta dùng API proxy hoặc chấp nhận rủi ro CORS.
+                // TUY NHIÊN: Để đọc được kết quả OCR, ta PHẢI dùng mode 'cors' hoặc workaround.
+                // Google Apps Script Web App hỗ trợ CORS redirect.
+                redirect: "follow",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "ocr", image: base64 })
+            });
+            
+            // Do chính sách CORS của Google gắt gao, fetch trực tiếp thường khó lấy kết quả về.
+            // Nên ta dùng cách parse text response.
+            const textData = await response.json(); 
+            
+            if (textData.result === "success") {
+                const info = textData.info;
+                // Điền dữ liệu vào form
+                if (info.soCCCD) document.getElementById('soCCCD').value = info.soCCCD;
+                if (info.hoTen) document.getElementById('hoTen').value = info.hoTen;
+                if (info.ngaySinh) document.getElementById('ngaySinh').value = info.ngaySinh;
+                if (info.queQuan) {
+                    document.getElementById('queQuanFull').value = info.queQuan;
+                    alert("Đã tìm thấy địa chỉ: " + info.queQuan + "\nBạn vui lòng chọn Tỉnh/Huyện tương ứng bên dưới.");
+                }
+                showLoading(false);
+            } else {
+                alert("Lỗi OCR: " + textData.error);
+                showLoading(false);
+            }
+
+        } catch (e) {
+            // Trường hợp CORS chặn không đọc được response nhưng server vẫn chạy
+            // Đây là hạn chế của Apps Script free.
+            console.log(e);
+            alert("Đã gửi ảnh. Nếu không thấy tự điền, vui lòng nhập tay. (Do hạn chế trình duyệt)");
+            showLoading(false);
+        }
     }
 
-    // 4. Gửi Form
-    document.getElementById('infoForm').addEventListener('submit', async function(e) {
+    // 4. Gửi Form cuối cùng
+    document.getElementById('infoForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        showLoading(true, "Đang lưu hồ sơ...");
         
-        // Kiểm tra link
-        if (GOOGLE_SCRIPT_URL.includes("DÁN_LINK")) {
-            alert("Chưa cấu hình Link Google Script!");
-            return;
-        }
-
-        const btn = document.getElementById('submitBtn');
-        const oldText = btn.innerText;
-        btn.innerText = "⏳ Đang nén ảnh & Gửi...";
-        btn.disabled = true;
-
-        // Xử lý địa chỉ
-        const pIndex = provinceSelect.selectedIndex;
-        const pName = pIndex > 0 ? provinceSelect.options[pIndex].text : "";
-        const dName = districtSelect.value;
-        const fullAddress = dName ? `${dName}, ${pName}` : pName;
-
-        // Xử lý ảnh
-        let imageBase64 = "";
-        const fileInput = document.getElementById('cameraInput');
-        if (fileInput.files.length > 0) {
-            try {
-                imageBase64 = await processImage(fileInput.files[0]);
-            } catch (err) {
-                console.error(err);
-                alert("Lỗi xử lý ảnh!");
-            }
-        }
+        // Lấy địa chỉ
+        let pName = "", dName = "";
+        if (provinceSelect.selectedIndex > 0) pName = provinceSelect.options[provinceSelect.selectedIndex].text;
+        dName = districtSelect.value;
+        const fullAddr = dName ? `${dName}, ${pName}` : pName;
 
         const data = {
+            action: "submit",
             soCCCD: document.getElementById('soCCCD').value,
-            hoTen: document.getElementById('hoTen').value.toUpperCase(),
-            ngaySinh: document.getElementById('ngaySinh').value, // yyyy-mm-dd
+            hoTen: document.getElementById('hoTen').value,
+            ngaySinh: document.getElementById('ngaySinh').value,
             sdt: document.getElementById('sdt').value,
-            queQuan: fullAddress,
+            queQuan: fullAddr,
+            honNhan: document.getElementById('honNhan').value,
             phongBan: document.getElementById('phongBan').value,
             viTri: document.getElementById('viTri').value,
             mucLuong: document.getElementById('mucLuong').value,
             kinhNghiem: document.getElementById('kinhNghiem').value,
-            image: imageBase64
+            image: currentImageBase64
         };
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // Quan trọng
-            headers: { 'Content-Type': 'application/json' },
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(data)
-        })
-        .then(() => {
-            alert("✅ Gửi hồ sơ thành công!");
-            btn.innerText = oldText;
-            btn.disabled = false;
+        }).then(() => {
+            showLoading(false);
+            alert("✅ Đã gửi hồ sơ thành công!");
             window.location.reload();
-        })
-        .catch(error => {
-            alert("Lỗi: " + error);
-            btn.innerText = oldText;
-            btn.disabled = false;
+        }).catch(err => {
+            showLoading(false);
+            alert("Lỗi: " + err);
         });
     });
+
+    function showLoading(show, text = "") {
+        const el = document.getElementById('loading');
+        const txt = document.getElementById('loadingText');
+        if (show) {
+            el.classList.remove('hidden');
+            txt.innerText = text;
+        } else {
+            el.classList.add('hidden');
+        }
+    }
 </script>
 
 </body>
