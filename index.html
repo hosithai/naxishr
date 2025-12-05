@@ -1,49 +1,249 @@
-function doPost(e) {
-  var lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Nhân Sự</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #eef2f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .container { max-width: 600px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .form-section { border-left: 4px solid #0d6efd; padding-left: 15px; margin-bottom: 20px; background-color: #f8f9fa; padding-top: 10px; padding-bottom: 10px; border-radius: 0 5px 5px 0; }
+        .section-title { font-weight: bold; color: #0d6efd; margin: 0; text-transform: uppercase; font-size: 0.9rem; }
+        .required::after { content: " *"; color: red; }
+        .btn-primary { background-color: #0d6efd; padding: 12px; font-weight: bold; letter-spacing: 0.5px; }
+        .preview-box { margin-top: 10px; text-align: center; display: none; }
+        .preview-box img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
 
-  try {
-    var doc = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = doc.getActiveSheet();
-    var data = JSON.parse(e.postData.contents);
+<div class="container">
+    <h3 class="text-center fw-bold mb-4 text-primary">NHẬP LIỆU HỒ SƠ</h3>
 
-    // Xử lý lưu ảnh vào Drive (Nếu có ảnh)
-    var imageUrl = "";
-    if (data.image && data.image.length > 100) {
-      try {
-        var imageBytes = Utilities.base64Decode(data.image.split(',')[1]);
-        // Đặt tên ảnh theo: Tên_SốCCCD.jpg
-        var fileName = data.hoTen + "_" + data.soCCCD + ".jpg";
-        var blob = Utilities.newBlob(imageBytes, "image/jpeg", fileName);
-        var file = DriveApp.createFile(blob);
-        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        imageUrl = file.getUrl();
-      } catch (err) {
-        imageUrl = "Lỗi lưu ảnh";
-      }
-    }
+    <form id="infoForm">
+        
+        <!-- PHẦN 1: THÔNG TIN CÁ NHÂN -->
+        <div class="form-section">
+            <p class="section-title">1. Thông tin cá nhân</p>
+        </div>
 
-    // Ghi dữ liệu vào Sheet
-    sheet.appendRow([
-      Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss"), // A
-      data.hoTen,       // B
-      "'" + data.ngaySinh, // C (Thêm ' để giữ định dạng ngày)
-      "'" + data.soCCCD,   // D (Thêm ' để giữ số 0 đầu)
-      data.queQuan,     // E
-      "'" + data.sdt,   // F
-      data.phongBan,    // G
-      data.viTri,       // H
-      data.mucLuong,    // I
-      data.kinhNghiem,  // J
-      data.honNhan,     // K
-      imageUrl          // L
-    ]);
+        <div class="mb-3">
+            <label class="form-label required">Họ và Tên</label>
+            <input type="text" class="form-control" id="hoTen" required placeholder="NHẬP CHỮ IN HOA" style="text-transform: uppercase;">
+        </div>
 
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'success' })).setMimeType(ContentService.MimeType.JSON);
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label required">Ngày sinh</label>
+                <input type="date" class="form-control" id="ngaySinh" required>
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label required">Số CCCD</label>
+                <input type="number" class="form-control" id="soCCCD" required placeholder="12 số...">
+            </div>
+        </div>
 
-  } catch (e) {
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': e.toString() })).setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
-  }
-}
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label required">Số điện thoại</label>
+                <input type="number" class="form-control" id="sdt" required placeholder="09xx...">
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Tình trạng hôn nhân</label>
+                <select class="form-select" id="honNhan">
+                    <option value="Độc thân">Độc thân</option>
+                    <option value="Đã kết hôn">Đã kết hôn</option>
+                    <option value="Khác">Khác</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label required">Quê quán (Chọn Tỉnh/Huyện)</label>
+            <div class="d-flex gap-2">
+                <select class="form-select" id="province" required>
+                    <option value="">-- Tỉnh / Thành phố --</option>
+                </select>
+                <select class="form-select" id="district" required disabled>
+                    <option value="">-- Quận / Huyện --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- PHẦN 2: CÔNG VIỆC -->
+        <div class="form-section mt-4">
+            <p class="section-title">2. Thông tin ứng tuyển</p>
+        </div>
+
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label required">Phòng ban</label>
+                <select class="form-select" id="phongBan" required>
+                    <option value="" disabled selected>Chọn...</option>
+                    <option value="TAG">TAG</option><option value="CARE">CARE</option><option value="KHO">KHO</option>
+                    <option value="CS">CS</option><option value="MUA HANG">MUA HANG</option><option value="DTP">DTP</option>
+                    <option value="SX">SX</option><option value="XNK">XNK</option><option value="TV">TV</option>
+                    <option value="IT">IT</option><option value="ACC">ACC</option>
+                </select>
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label required">Vị trí</label>
+                <select class="form-select" id="viTri" required>
+                    <option value="" disabled selected>Chọn...</option>
+                    <option value="Công nhân">Công nhân</option>
+                    <option value="Sub CS">Sub CS</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Manager">Manager</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label required">Mức lương (Triệu)</label>
+                <input type="number" class="form-control" id="mucLuong" step="0.5" placeholder="VD: 8.5" required>
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Kinh nghiệm</label>
+                <input type="text" class="form-control" id="kinhNghiem" placeholder="VD: 1 năm...">
+            </div>
+        </div>
+
+        <!-- PHẦN 3: ẢNH -->
+        <div class="form-section mt-4">
+            <p class="section-title">3. Hình ảnh hồ sơ</p>
+        </div>
+        <div class="mb-4">
+            <label class="form-label">Ảnh chụp CCCD (Mặt trước)</label>
+            <input type="file" class="form-control" id="fileInput" accept="image/*">
+            <div class="preview-box" id="previewBox">
+                <img id="previewImg" src="">
+            </div>
+            <small class="text-muted fst-italic">Hệ thống sẽ tự động nén ảnh để gửi nhanh hơn.</small>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-100 shadow-sm">📤 GỬI DỮ LIỆU</button>
+    </form>
+</div>
+
+<script>
+    // ===============================================
+    // 👇 DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY 👇
+    const GOOGLE_SCRIPT_URL = "DÁN_LINK_CỦA_BẠN_VÀO_ĐÂY"; 
+    // ===============================================
+
+    // 1. Tự động tải danh sách Tỉnh/Huyện Việt Nam
+    const provinceSelect = document.getElementById('province');
+    const districtSelect = document.getElementById('district');
+    let locationData = [];
+
+    fetch('https://provinces.open-api.vn/api/?depth=2')
+        .then(res => res.json())
+        .then(data => {
+            locationData = data;
+            data.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p.code; opt.text = p.name;
+                provinceSelect.add(opt);
+            });
+        });
+
+    provinceSelect.addEventListener('change', function() {
+        districtSelect.innerHTML = '<option value="">-- Quận / Huyện --</option>';
+        districtSelect.disabled = true;
+        let p = locationData.find(x => x.code == this.value);
+        if (p && p.districts) {
+            districtSelect.disabled = false;
+            p.districts.forEach(d => {
+                let opt = document.createElement('option');
+                opt.value = d.name; opt.text = d.name;
+                districtSelect.add(opt);
+            });
+        }
+    });
+
+    // 2. Xử lý Ảnh (Nén ảnh để gửi nhanh)
+    let base64Image = "";
+    document.getElementById('fileInput').addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    // Vẽ lại ảnh lên Canvas để resize
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Chuyển thành chuỗi Base64
+                    base64Image = canvas.toDataURL('image/jpeg', 0.7); // Chất lượng 70%
+                    
+                    // Hiện preview
+                    document.getElementById('previewImg').src = base64Image;
+                    document.getElementById('previewBox').style.display = 'block';
+                }
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // 3. Xử lý Gửi Form
+    document.getElementById('infoForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        if (GOOGLE_SCRIPT_URL.includes("DÁN_LINK")) {
+            alert("Lỗi: Bạn chưa dán link Google Script vào code!");
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ Đang gửi dữ liệu...";
+        btn.disabled = true;
+
+        // Lấy địa chỉ đầy đủ
+        let tinh = provinceSelect.options[provinceSelect.selectedIndex].text;
+        let huyen = districtSelect.value;
+        let diaChiFull = huyen ? `${huyen}, ${tinh}` : tinh;
+
+        const data = {
+            hoTen: document.getElementById('hoTen').value.toUpperCase(),
+            ngaySinh: document.getElementById('ngaySinh').value, // yyyy-mm-dd
+            soCCCD: document.getElementById('soCCCD').value,
+            sdt: document.getElementById('sdt').value,
+            queQuan: diaChiFull,
+            honNhan: document.getElementById('honNhan').value,
+            phongBan: document.getElementById('phongBan').value,
+            viTri: document.getElementById('viTri').value,
+            mucLuong: document.getElementById('mucLuong').value,
+            kinhNghiem: document.getElementById('kinhNghiem').value,
+            image: base64Image // Chuỗi ảnh đã nén
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(() => {
+            alert("✅ Gửi hồ sơ thành công!");
+            window.location.reload(); // Tải lại trang để nhập người mới
+        })
+        .catch(err => {
+            alert("Lỗi gửi: " + err);
+            btn.innerText = originalText;
+            btn.disabled = false;
+        });
+    });
+</script>
+
+</body>
+</html>
