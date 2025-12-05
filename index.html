@@ -117,99 +117,78 @@
     </form>
 </div>
 
-<script>
-    // 👇👇👇 DÁN LINK MỚI CỦA BẠN VÀO ĐÂY 👇👇👇
+ <script>
+    // 👇 DÁN LINK APPS SCRIPT CỦA BẠN VÀO ĐÂY 👇
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnOJhg-fz8wN3-JVVXODrPPNPJJ-kCpPFtCtr2VqF2SvPlR-S_hsjy9ZVWG9ng6YrOhA/exec"; 
-    // ============================================
 
-    let base64Image = "";
+    // ... (Giữ nguyên phần xử lý Tỉnh/Huyện và Ảnh) ...
+    // ... (Copy lại từ code cũ hoặc giữ nguyên nếu đã chạy tốt) ...
+    
+    // Đảm bảo phần code xử lý Dropdown Tỉnh/Huyện và Ảnh vẫn có nhé!
+    // Dưới đây là phần xử lý nút Gửi:
 
-    // 1. Load Địa chỉ (Giữ nguyên)
-    const provinceSelect = document.getElementById('province');
-    const districtSelect = document.getElementById('district');
-    fetch('https://provinces.open-api.vn/api/?depth=2').then(r=>r.json()).then(d=>{
-        d.forEach(p=>{ let o=document.createElement('option'); o.value=p.code; o.text=p.name; provinceSelect.add(o); });
-    });
-    provinceSelect.addEventListener('change', function(){
-        districtSelect.innerHTML='<option value="">Quận/Huyện...</option>'; districtSelect.disabled=true;
-        let p=document.getElementById('province').value; // fix logic
-        // Tìm lại trong data gốc (cần biến global locationData nếu làm chuẩn, ở đây làm tắt)
-        fetch('https://provinces.open-api.vn/api/?depth=2').then(r=>r.json()).then(all=>{
-           let found = all.find(x => x.code == p);
-           if(found && found.districts){
-               districtSelect.disabled=false;
-               found.districts.forEach(d=>{ let o=document.createElement('option'); o.value=d.name; o.text=d.name; districtSelect.add(o); });
-           }
-        });
-    });
-
-    // 2. Xử lý ảnh
-    document.getElementById('fileInput').addEventListener('change', function(){
-        if(this.files[0]){
-            let r = new FileReader();
-            r.readAsDataURL(this.files[0]);
-            r.onload = function(e){
-                 let img = new Image(); img.src = e.target.result;
-                 img.onload = function(){
-                     let c = document.createElement('canvas');
-                     let scale = 800/img.width;
-                     c.width=800; c.height=img.height*scale;
-                     c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-                     base64Image = c.toDataURL('image/jpeg', 0.7);
-                 }
-            }
-        }
-    });
-
-    // 3. Gửi Form
     document.getElementById('infoForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // --- DEBUG: KIỂM TRA DỮ LIỆU TRƯỚC KHI GỬI ---
-        const soCCCD = document.getElementById('soCCCD').value;
-        const phongBan = document.getElementById('phongBan').value;
-        
-        if (!soCCCD) { alert("Lỗi: Chưa nhập Số CCCD!"); return; }
-        if (!phongBan) { alert("Lỗi: Chưa chọn Phòng ban!"); return; }
-
         const btn = document.getElementById('submitBtn');
-        btn.innerText = "Đang gửi..."; btn.disabled = true;
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ Đang gửi...";
+        btn.disabled = true;
 
-        let tinh = provinceSelect.options[provinceSelect.selectedIndex].text;
-        let huyen = districtSelect.value;
+        // Lấy địa chỉ
+        let tinh = "";
+        let huyen = "";
+        
+        // Kiểm tra xem đã chọn tỉnh chưa để tránh lỗi null
+        if (document.getElementById('province').selectedIndex > 0) {
+             tinh = document.getElementById('province').options[document.getElementById('province').selectedIndex].text;
+        }
+        if (document.getElementById('district').value) {
+             huyen = document.getElementById('district').value;
+        }
+        
         let diaChiFull = huyen ? `${huyen}, ${tinh}` : tinh;
 
+        // Thu thập dữ liệu
         const data = {
             hoTen: document.getElementById('hoTen').value.toUpperCase(),
             ngaySinh: document.getElementById('ngaySinh').value,
-            soCCCD: soCCCD,       // Gán đúng biến đã lấy
-            phongBan: phongBan,   // Gán đúng biến đã lấy
-            viTri: document.getElementById('viTri').value,
+            
+            // Đảm bảo lấy đúng ID này
+            soCCCD: document.getElementById('soCCCD').value, 
+            
             sdt: document.getElementById('sdt').value,
             queQuan: diaChiFull,
-            honNhan: document.getElementById('honNhan').value,
+            
+            // Đảm bảo lấy đúng ID này
+            phongBan: document.getElementById('phongBan').value,
+            
+            viTri: document.getElementById('viTri').value,
             mucLuong: document.getElementById('mucLuong').value,
             kinhNghiem: document.getElementById('kinhNghiem').value,
-            image: base64Image
+            honNhan: document.getElementById('honNhan').value,
+            
+            // Biến base64Image phải được khai báo và xử lý ở đoạn code xử lý ảnh phía trên
+            image: typeof base64Image !== 'undefined' ? base64Image : "" 
         };
 
-        // In ra console để kiểm tra (F12 -> Console)
-        console.log("Dữ liệu gửi đi:", data);
-
+        // Gửi đi
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-        }).then(()=>{
-            alert("✅ Thành công!");
-            window.location.reload();
-        }).catch(err=>{
-            alert("Lỗi: " + err);
+        })
+        .then(() => {
+            alert("✅ Gửi thành công! Hãy kiểm tra Google Sheet.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+            // window.location.reload(); // Bỏ comment dòng này để tự reload sau khi gửi
+        })
+        .catch(error => {
+            alert("Lỗi: " + error);
+            btn.innerText = originalText;
             btn.disabled = false;
         });
     });
 </script>
-
-</body>
-</html>
