@@ -3,215 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quét CCCD & Ứng Tuyển</title>
+    <title>Tuyển Dụng & Quét CCCD</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
-        body { background-color: #f8f9fa; font-family: Arial, sans-serif; }
-        .container { max-width: 600px; margin-top: 20px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 20px; background: #000; }
+        body { background-color: #f0f2f5; font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin-top: 20px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 20px; background: black; }
         .hidden { display: none; }
-        #scanResult { margin-bottom: 15px; font-weight: bold; color: green; min-height: 20px; }
+        .section-title { font-size: 1.1rem; font-weight: bold; color: #0d6efd; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #e9ecef; padding-bottom: 5px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h3 class="text-center text-primary mb-4">Nhập Thông Tin Ứng Viên</h3>
+<div class="container mb-5">
+    <h3 class="text-center text-primary fw-bold mb-4">THÔNG TIN ỨNG VIÊN</h3>
 
     <!-- CAMERA -->
-    <div id="reader"></div>
-    <div class="text-center mb-3">
-        <button id="startScanBtn" class="btn btn-warning w-100 fw-bold">📷 Bật Camera Quét CCCD</button>
-        <button id="stopScanBtn" class="btn btn-secondary w-100 hidden">🛑 Dừng Camera</button>
-    </div>
-    <p id="scanResult" class="text-center"></p>
+    <div id="reader" class="hidden"></div>
+    <button id="toggleCamera" class="btn btn-warning w-100 mb-3 fw-bold">📷 Quét QR CCCD (Hỗ trợ nhập liệu)</button>
+    <p id="scanStatus" class="text-center text-success fw-bold"></p>
 
-    <!-- FORM NHẬP LIỆU -->
     <form id="infoForm">
+        <div class="section-title">1. Thông tin cá nhân</div>
+        
+        <div class="mb-3">
+            <label class="form-label">Số CCCD / CMND</label>
+            <input type="number" class="form-control" id="soCCCD" placeholder="Quét QR hoặc nhập tay...">
+        </div>
+
         <div class="mb-3">
             <label class="form-label">Họ và Tên</label>
-            <input type="text" class="form-control" id="hoTen" required readonly style="background-color: #e9ecef;">
+            <input type="text" class="form-control" id="hoTen" required placeholder="Nhập họ tên in hoa...">
         </div>
-        
+
         <div class="row">
             <div class="col-6 mb-3">
                 <label class="form-label">Ngày sinh</label>
-                <input type="text" class="form-control" id="ngaySinh" required readonly style="background-color: #e9ecef;">
+                <input type="date" class="form-control" id="ngaySinh" required>
             </div>
             <div class="col-6 mb-3">
                 <label class="form-label">Số điện thoại</label>
-                <input type="number" class="form-control" id="sdt" required placeholder="09...">
+                <input type="number" class="form-control" id="sdt" required placeholder="09xxxx...">
             </div>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Quê quán / Thường trú</label>
-            <input type="text" class="form-control" id="queQuan" required readonly style="background-color: #e9ecef;">
+            <label class="form-label">Quê quán (Chọn Tỉnh - Huyện)</label>
+            <div class="d-flex gap-2">
+                <select class="form-select" id="province" required>
+                    <option value="">Chọn Tỉnh/TP...</option>
+                </select>
+                <select class="form-select" id="district" required disabled>
+                    <option value="">Chọn Quận/Huyện...</option>
+                </select>
+            </div>
+            <!-- Trường ẩn để lưu chuỗi địa chỉ full gửi đi -->
+            <input type="hidden" id="queQuanFull">
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Vị trí ứng tuyển</label>
-            <select class="form-select" id="viTri" required>
-                <option value="" selected disabled>Chọn vị trí...</option>
-                <option value="TAG">1. TAG</option>
-                <option value="Care">2. Care</option>
-                <option value="CS">3. CS</option>
-                <option value="Kho">4. Kho</option>
-                <option value="TV">5. TV</option>
-            </select>
+        <div class="section-title">2. Thông tin ứng tuyển</div>
+
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Phòng ban</label>
+                <select class="form-select" id="phongBan" required>
+                    <option value="" disabled selected>Chọn...</option>
+                    <option value="TAG">TAG</option>
+                    <option value="CARE">CARE</option>
+                    <option value="KHO">KHO</option>
+                    <option value="CS">CS</option>
+                    <option value="MUA HANG">MUA HANG</option>
+                    <option value="DTP">DTP</option>
+                    <option value="SX">SX</option>
+                    <option value="XNK">XNK</option>
+                    <option value="TV">TV</option>
+                    <option value="IT">IT</option>
+                    <option value="ACC">ACC</option>
+                </select>
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Vị trí</label>
+                <select class="form-select" id="viTri" required>
+                    <option value="" disabled selected>Chọn...</option>
+                    <option value="Công nhân">Công nhân</option>
+                    <option value="Sub CS">Sub CS</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Manager">Manager</option>
+                </select>
+            </div>
         </div>
 
         <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-6 mb-3">
+                <label class="form-label">Mức lương (Triệu VNĐ)</label>
+                <input type="number" class="form-control" id="mucLuong" step="0.5" placeholder="VD: 8.5">
+            </div>
+            <div class="col-6 mb-3">
                 <label class="form-label">Kinh nghiệm</label>
                 <input type="text" class="form-control" id="kinhNghiem" placeholder="VD: 1 năm...">
             </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Mức lương hiện tại</label>
-                <input type="text" class="form-control" id="mucLuong" placeholder="VD: 10tr...">
-            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Lý do chuyển việc</label>
-            <input type="text" class="form-control" id="lyDo">
+        <div class="section-title">3. Ảnh chụp CCCD</div>
+        <div class="mb-4">
+            <input type="file" class="form-control" id="cameraInput" accept="image/*" capture="environment">
+            <div class="form-text text-muted">Chụp ảnh mặt trước rõ nét. Hệ thống sẽ tự nén ảnh.</div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Tình trạng hôn nhân</label>
-            <select class="form-select" id="honNhan">
-                <option value="Độc thân">Độc thân</option>
-                <option value="Đã kết hôn">Đã kết hôn</option>
-            </select>
-        </div>
-
-        <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-2 fw-bold">📤 Gửi Thông Tin</button>
+        <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-3 fw-bold fs-5">🚀 GỬI HỒ SƠ</button>
     </form>
 </div>
 
-<!-- CODE XỬ LÝ (JAVASCRIPT) -->
 <script>
-    // =========================================================================
-    // 👇👇👇 DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO GIỮA 2 DẤU NGOẶC KÉP DƯỚI ĐÂY 👇👇👇
+    // ==========================================
+    // 👇 DÁN LINK APPS SCRIPT CỦA BẠN VÀO ĐÂY 👇
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnOJhg-fz8wN3-JVVXODrPPNPJJ-kCpPFtCtr2VqF2SvPlR-S_hsjy9ZVWG9ng6YrOhA/exec"; 
-    // Ví dụ đúng: const GOOGLE_SCRIPT_URL = "https://script.google.com/...";
-    // =========================================================================
+    // ==========================================
 
+    // 1. Tải danh sách Tỉnh/Thành Việt Nam (Dùng API miễn phí)
+    const provinceSelect = document.getElementById('province');
+    const districtSelect = document.getElementById('district');
+    let locationData = [];
+
+    fetch('https://provinces.open-api.vn/api/?depth=2')
+        .then(response => response.json())
+        .then(data => {
+            locationData = data;
+            data.forEach(p => {
+                let option = document.createElement('option');
+                option.value = p.code;
+                option.text = p.name;
+                provinceSelect.add(option);
+            });
+        })
+        .catch(err => console.error("Lỗi tải địa chỉ:", err));
+
+    // Xử lý khi chọn Tỉnh -> Hiện Huyện
+    provinceSelect.addEventListener('change', function() {
+        districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện...</option>';
+        districtSelect.disabled = true;
+        
+        const selectedCode = this.value;
+        const province = locationData.find(p => p.code == selectedCode);
+        
+        if (province && province.districts) {
+            districtSelect.disabled = false;
+            province.districts.forEach(d => {
+                let option = document.createElement('option');
+                option.value = d.name; // Lưu tên huyện
+                option.text = d.name;
+                districtSelect.add(option);
+            });
+        }
+    });
+
+    // 2. Xử lý Camera Quét QR
     let html5QrCode;
-    let isScanning = false;
+    let isCameraOn = false;
 
-    // 1. Hàm chạy khi quét thành công
-    const onScanSuccess = (decodedText, decodedResult) => {
-        html5QrCode.stop().then(() => {
-            document.getElementById('startScanBtn').classList.remove('hidden');
-            document.getElementById('stopScanBtn').classList.add('hidden');
-            document.getElementById('scanResult').innerText = "✅ Đã quét xong!";
-            isScanning = false;
-        });
-
-        // Tách dữ liệu CCCD (Ngăn cách bởi dấu |)
-        try {
-            const parts = decodedText.split('|');
-            if (parts.length >= 6) {
-                document.getElementById('hoTen').value = parts[2]; 
-                
-                // Format ngày sinh từ ddMMyyyy -> dd/MM/yyyy
-                const d = parts[3];
-                document.getElementById('ngaySinh').value = d.substring(0,2) + '/' + d.substring(2,4) + '/' + d.substring(4);
-                
-                document.getElementById('queQuan').value = parts[5];
-            } else {
-                alert("Mã QR không đúng định dạng CCCD!");
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Lỗi đọc dữ liệu: " + e.message);
-        }
-    };
-
-    // 2. Xử lý nút Bật Camera
-    document.getElementById('startScanBtn').addEventListener('click', () => {
-        // Kiểm tra thư viện
-        if (typeof Html5Qrcode === "undefined") {
-            alert("Lỗi: Mạng yếu hoặc chưa tải được thư viện Camera. Hãy F5 lại trang!");
-            return;
-        }
-
-        try {
-            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+    document.getElementById('toggleCamera').addEventListener('click', function() {
+        if (!isCameraOn) {
+            document.getElementById('reader').classList.remove('hidden');
+            this.innerText = "🛑 Dừng quét";
             
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-            
-            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
-            .then(() => {
-                document.getElementById('startScanBtn').classList.add('hidden');
-                document.getElementById('stopScanBtn').classList.remove('hidden');
-                document.getElementById('scanResult').innerText = "Đang quét...";
-                isScanning = true;
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+            (decodedText) => {
+                // Khi quét thành công
+                html5QrCode.stop();
+                document.getElementById('reader').classList.add('hidden');
+                document.getElementById('toggleCamera').innerText = "📷 Quét lại QR";
+                document.getElementById('scanStatus').innerText = "✅ Đã quét xong!";
+                isCameraOn = false;
+
+                // Xử lý dữ liệu QR CCCD
+                const parts = decodedText.split('|');
+                if (parts.length >= 6) {
+                    // Dữ liệu chuẩn CCCD Chip
+                    document.getElementById('soCCCD').value = parts[0];
+                    document.getElementById('hoTen').value = parts[2];
+                    
+                    // Format ngày sinh (ddMMyyyy -> yyyy-MM-dd cho input type=date)
+                    const dobRaw = parts[3];
+                    const dobISO = `${dobRaw.slice(4)}-${dobRaw.slice(2,4)}-${dobRaw.slice(0,2)}`;
+                    document.getElementById('ngaySinh').value = dobISO;
+                    
+                    // Địa chỉ từ QR (Thường trú) - Gợi ý vào ô
+                    // Tuy nhiên vì ta dùng Dropdown Tỉnh/Huyện nên chỉ hiển thị gợi ý
+                    alert("Đã lấy được thông tin: " + parts[2] + "\nQuê quán trong QR: " + parts[5] + "\nVui lòng chọn Tỉnh/Huyện tương ứng trong danh sách.");
+                } else {
+                    // QR kiểu cũ hoặc chỉ có số
+                    document.getElementById('soCCCD').value = decodedText;
+                    alert("Mã QR này chỉ chứa số: " + decodedText + ". Vui lòng nhập tay các thông tin còn lại.");
+                }
             })
-            .catch(err => {
-                alert("Không mở được Camera!\nLỗi: " + err + "\nHãy thử chạy trên HTTPS hoặc localhost.");
-            });
-        } catch (e) {
-            alert("Lỗi khởi tạo: " + e);
+            .catch(err => alert("Không bật được camera: " + err));
+            isCameraOn = true;
+        } else {
+            html5QrCode.stop();
+            document.getElementById('reader').classList.add('hidden');
+            this.innerText = "📷 Quét QR CCCD";
+            isCameraOn = false;
         }
     });
 
-    // 3. Xử lý nút Tắt Camera
-    document.getElementById('stopScanBtn').addEventListener('click', () => {
-        if(isScanning && html5QrCode) {
-            html5QrCode.stop().then(() => {
-                document.getElementById('startScanBtn').classList.remove('hidden');
-                document.getElementById('stopScanBtn').classList.add('hidden');
-                document.getElementById('scanResult').innerText = "";
-                isScanning = false;
-            });
-        }
-    });
+    // 3. Hàm nén ảnh (Resize image) trước khi gửi
+    // Google Apps Script giới hạn dung lượng, nên cần resize ảnh nhỏ lại < 1MB
+    const processImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Giới hạn chiều rộng 800px
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Xuất ra base64 jpeg chất lượng 0.7
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                }
+            };
+            reader.onerror = error => reject(error);
+        });
+    }
 
-    // 4. Xử lý Gửi Form
-    document.getElementById('infoForm').addEventListener('submit', function(e) {
+    // 4. Gửi Form
+    document.getElementById('infoForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-
-        // Kiểm tra link script
+        
+        // Kiểm tra link
         if (GOOGLE_SCRIPT_URL.includes("DÁN_LINK")) {
-            alert("Bạn chưa dán link Google Script vào code!");
+            alert("Chưa cấu hình Link Google Script!");
             return;
         }
 
         const btn = document.getElementById('submitBtn');
         const oldText = btn.innerText;
-        btn.innerText = "Đang gửi...";
+        btn.innerText = "⏳ Đang nén ảnh & Gửi...";
         btn.disabled = true;
 
+        // Xử lý địa chỉ
+        const pIndex = provinceSelect.selectedIndex;
+        const pName = pIndex > 0 ? provinceSelect.options[pIndex].text : "";
+        const dName = districtSelect.value;
+        const fullAddress = dName ? `${dName}, ${pName}` : pName;
+
+        // Xử lý ảnh
+        let imageBase64 = "";
+        const fileInput = document.getElementById('cameraInput');
+        if (fileInput.files.length > 0) {
+            try {
+                imageBase64 = await processImage(fileInput.files[0]);
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi xử lý ảnh!");
+            }
+        }
+
         const data = {
-            hoTen: document.getElementById('hoTen').value,
-            ngaySinh: document.getElementById('ngaySinh').value,
-            queQuan: document.getElementById('queQuan').value,
+            soCCCD: document.getElementById('soCCCD').value,
+            hoTen: document.getElementById('hoTen').value.toUpperCase(),
+            ngaySinh: document.getElementById('ngaySinh').value, // yyyy-mm-dd
             sdt: document.getElementById('sdt').value,
+            queQuan: fullAddress,
+            phongBan: document.getElementById('phongBan').value,
             viTri: document.getElementById('viTri').value,
-            kinhNghiem: document.getElementById('kinhNghiem').value,
             mucLuong: document.getElementById('mucLuong').value,
-            lyDo: document.getElementById('lyDo').value,
-            honNhan: document.getElementById('honNhan').value
+            kinhNghiem: document.getElementById('kinhNghiem').value,
+            image: imageBase64
         };
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'no-cors', // Quan trọng
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
         .then(() => {
-            alert("✅ Gửi thành công!");
+            alert("✅ Gửi hồ sơ thành công!");
             btn.innerText = oldText;
             btn.disabled = false;
-            // Xóa form nếu muốn: document.getElementById('infoForm').reset();
-            window.location.reload(); 
+            window.location.reload();
         })
         .catch(error => {
-            alert("Lỗi gửi: " + error);
+            alert("Lỗi: " + error);
             btn.innerText = oldText;
             btn.disabled = false;
         });
