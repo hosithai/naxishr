@@ -3,83 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hồ Sơ Nhân Sự</title>
+    <title>Nhập Liệu Hồ Sơ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #eef2f6; font-family: Arial, sans-serif; }
-        .container { max-width: 600px; margin: 20px auto; background: white; padding: 25px; border-radius: 10px; }
+        body { background-color: #f0f2f5; font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .required::after { content: " *"; color: red; }
+        .section-title { color: #0d6efd; font-weight: bold; border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; margin-top: 20px; margin-bottom: 15px; }
+        #previewBox { display: none; margin-top: 10px; text-align: center; }
+        #previewImg { max-width: 100%; border-radius: 8px; border: 1px solid #ddd; max-height: 200px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h3 class="text-center fw-bold text-primary mb-4">NHẬP LIỆU HỒ SƠ</h3>
-    
+    <h3 class="text-center text-primary fw-bold mb-4">HỒ SƠ NHÂN SỰ</h3>
+
     <form id="infoForm">
-        <!-- Họ tên -->
+        
+        <div class="section-title">1. Thông tin cá nhân</div>
+
         <div class="mb-3">
             <label class="form-label required">Họ và Tên</label>
-            <input type="text" class="form-control" id="hoTen" required style="text-transform: uppercase;" placeholder="NGUYEN VAN A">
+            <!-- Tự động viết hoa khi nhập -->
+            <input type="text" class="form-control" id="hoTen" required style="text-transform: uppercase;" placeholder="NGUYEN VAN A" oninput="this.value = this.value.toUpperCase()">
         </div>
 
-        <!-- Số CCCD & Ngày sinh -->
         <div class="row">
-            <div class="col-6 mb-3">
-                <label class="form-label required">Số CCCD</label>
-                <!-- Đã kiểm tra ID: soCCCD -->
-                <input type="number" class="form-control" id="soCCCD" required placeholder="12 số...">
-            </div>
             <div class="col-6 mb-3">
                 <label class="form-label required">Ngày sinh</label>
                 <input type="date" class="form-control" id="ngaySinh" required>
             </div>
+            <div class="col-6 mb-3">
+                <label class="form-label required">Số CCCD</label>
+                <input type="number" class="form-control" id="soCCCD" required placeholder="12 số...">
+            </div>
         </div>
 
-        <!-- SĐT & Hôn nhân -->
         <div class="row">
             <div class="col-6 mb-3">
                 <label class="form-label required">Số điện thoại</label>
-                <input type="number" class="form-control" id="sdt" required>
+                <input type="number" class="form-control" id="sdt" required placeholder="09xx...">
             </div>
             <div class="col-6 mb-3">
                 <label class="form-label">Hôn nhân</label>
                 <select class="form-select" id="honNhan">
                     <option value="Độc thân">Độc thân</option>
                     <option value="Đã kết hôn">Đã kết hôn</option>
+                    <option value="Khác">Khác</option>
                 </select>
             </div>
         </div>
 
-        <!-- Địa chỉ -->
         <div class="mb-3">
-            <label class="form-label required">Quê quán</label>
+            <label class="form-label required">Quê quán (Gõ để tìm kiếm)</label>
             <div class="d-flex gap-2">
-                <select class="form-select" id="province" required><option value="">Tỉnh/TP...</option></select>
-                <select class="form-select" id="district" required disabled><option value="">Quận/Huyện...</option></select>
+                <!-- Dùng Input List để vừa gõ vừa chọn -->
+                <input class="form-control" list="provinceList" id="province" placeholder="Nhập Tỉnh..." required>
+                <datalist id="provinceList"></datalist>
+
+                <input class="form-control" list="districtList" id="district" placeholder="Nhập Huyện..." required>
+                <datalist id="districtList"></datalist>
             </div>
         </div>
 
-        <hr>
+        <div class="section-title">2. Thông tin công việc</div>
 
-        <!-- Phòng ban & Vị trí -->
         <div class="row">
             <div class="col-6 mb-3">
                 <label class="form-label required">Phòng ban</label>
-                <!-- Đã kiểm tra ID: phongBan -->
                 <select class="form-select" id="phongBan" required>
                     <option value="" disabled selected>Chọn...</option>
-                    <option value="TAG">TAG</option>
-                    <option value="CARE">CARE</option>
-                    <option value="KHO">KHO</option>
-                    <option value="CS">CS</option>
-                    <option value="MUA HANG">MUA HANG</option>
-                    <option value="DTP">DTP</option>
-                    <option value="SX">SX</option>
-                    <option value="XNK">XNK</option>
-                    <option value="TV">TV</option>
-                    <option value="IT">IT</option>
-                    <option value="ACC">ACC</option>
+                    <option value="TAG">TAG</option><option value="CARE">CARE</option><option value="KHO">KHO</option>
+                    <option value="CS">CS</option><option value="MUA HANG">MUA HANG</option><option value="DTP">DTP</option>
+                    <option value="SX">SX</option><option value="XNK">XNK</option><option value="TV">TV</option>
+                    <option value="IT">IT</option><option value="ACC">ACC</option>
                 </select>
             </div>
             <div class="col-6 mb-3">
@@ -95,84 +93,165 @@
             </div>
         </div>
 
-        <!-- Lương & Kinh nghiệm -->
         <div class="row">
             <div class="col-6 mb-3">
                 <label class="form-label required">Lương (Triệu)</label>
-                <input type="number" class="form-control" id="mucLuong" step="0.5" required>
+                <input type="number" class="form-control" id="mucLuong" step="0.5" required placeholder="VD: 8.5">
             </div>
             <div class="col-6 mb-3">
                 <label class="form-label">Kinh nghiệm</label>
-                <input type="text" class="form-control" id="kinhNghiem">
+                <input type="text" class="form-control" id="kinhNghiem" placeholder="VD: 1 năm">
             </div>
         </div>
 
-        <!-- Ảnh -->
+        <div class="section-title">3. Ảnh CCCD (Mặt trước)</div>
         <div class="mb-3">
-            <label class="form-label">Ảnh CCCD</label>
             <input type="file" class="form-control" id="fileInput" accept="image/*">
+            <div id="previewBox">
+                <img id="previewImg" src="">
+                <div class="text-success small mt-1">✅ Ảnh đã sẵn sàng gửi</div>
+            </div>
         </div>
 
-        <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-2 fw-bold">GỬI HỒ SƠ</button>
+        <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-2 fw-bold fs-5 shadow-sm">📤 GỬI HỒ SƠ</button>
     </form>
 </div>
 
- <script>
-    // 👇 DÁN LINK APPS SCRIPT CỦA BẠN VÀO ĐÂY 👇
+<script>
+    // ==========================================================
+    // 👇👇👇 DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY 👇👇👇
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlGAtEC9Wml80eedj-XnSu6CA9PBdMTQXGYWmELnFOCJ1H41RRGbGcUBGhRXTbhyWCLQ/exec"; 
+    // ==========================================================
 
-    // ... (Giữ nguyên phần xử lý Tỉnh/Huyện và Ảnh) ...
-    // ... (Copy lại từ code cũ hoặc giữ nguyên nếu đã chạy tốt) ...
+    let base64Image = "";
     
-    // Đảm bảo phần code xử lý Dropdown Tỉnh/Huyện và Ảnh vẫn có nhé!
-    // Dưới đây là phần xử lý nút Gửi:
+    // --- CẤU HÌNH ĐỊA CHỈ (Ưu tiên Hà Nam) ---
+    const localData = {
+        "Tỉnh Hà Nam": [
+            "Thị xã Duy Tiên", "Thành phố Phủ Lý", "Huyện Bình Lục", 
+            "Huyện Kim Bảng", "Huyện Lý Nhân", "Huyện Thanh Liêm"
+        ],
+        "Thành phố Hà Nội": ["Quận Ba Đình", "Quận Hoàn Kiếm", "Quận Cầu Giấy", "Huyện Đông Anh", "Huyện Sóc Sơn", "Quận Đống Đa", "Quận Hà Đông"],
+        "Thành phố Hồ Chí Minh": ["Quận 1", "Quận 3", "Thành phố Thủ Đức", "Quận Bình Thạnh"]
+    };
 
+    const provinceInput = document.getElementById('province');
+    const districtInput = document.getElementById('district');
+    const provinceList = document.getElementById('provinceList');
+    const districtList = document.getElementById('districtList');
+
+    // Hàm load dữ liệu Tỉnh
+    function loadProvinces() {
+        // Nạp data cứng trước
+        Object.keys(localData).forEach(pName => {
+            let opt = document.createElement('option');
+            opt.value = pName;
+            provinceList.appendChild(opt);
+        });
+        // Tải thêm data online (nếu có mạng)
+        fetch('https://provinces.open-api.vn/api/?depth=2')
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(p => {
+                if (!localData[p.name]) { // Chỉ thêm nếu chưa có
+                    let opt = document.createElement('option');
+                    opt.value = p.name;
+                    provinceList.appendChild(opt);
+                    // Lưu luôn huyện vào bộ nhớ đệm
+                    localData[p.name] = p.districts.map(d => d.name);
+                }
+            });
+        }).catch(e => console.log("Dùng offline mode"));
+    }
+
+    // Hàm cập nhật huyện
+    function updateDistricts(provinceName) {
+        districtList.innerHTML = "";
+        districtInput.value = "";
+        if (localData[provinceName]) {
+            localData[provinceName].forEach(dName => {
+                let opt = document.createElement('option');
+                opt.value = dName;
+                districtList.appendChild(opt);
+            });
+        }
+    }
+
+    // Sự kiện khi trang tải xong
+    window.addEventListener('load', () => {
+        loadProvinces();
+        // MẶC ĐỊNH: HÀ NAM
+        provinceInput.value = "Tỉnh Hà Nam";
+        updateDistricts("Tỉnh Hà Nam");
+    });
+
+    // Sự kiện khi thay đổi Tỉnh
+    provinceInput.addEventListener('change', function() { updateDistricts(this.value); });
+    provinceInput.addEventListener('input', function() { 
+        if(localData[this.value]) updateDistricts(this.value); 
+    });
+
+    // --- XỬ LÝ ẢNH (Resize & Convert Base64) ---
+    document.getElementById('fileInput').addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.readAsDataURL(this.files[0]);
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Resize về 800px
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    base64Image = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Hiện preview
+                    document.getElementById('previewImg').src = base64Image;
+                    document.getElementById('previewBox').style.display = 'block';
+                }
+            }
+        }
+    });
+
+    // --- GỬI FORM ---
     document.getElementById('infoForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
+        // Kiểm tra link
+        if (GOOGLE_SCRIPT_URL.includes("DÁN_LINK")) {
+            alert("⚠️ Lỗi: Bạn chưa dán link Google Script vào code!");
+            return;
+        }
+
         const btn = document.getElementById('submitBtn');
         const originalText = btn.innerText;
-        btn.innerText = "⏳ Đang gửi...";
+        btn.innerText = "⏳ Đang gửi dữ liệu...";
         btn.disabled = true;
 
-        // Lấy địa chỉ
-        let tinh = "";
-        let huyen = "";
-        
-        // Kiểm tra xem đã chọn tỉnh chưa để tránh lỗi null
-        if (document.getElementById('province').selectedIndex > 0) {
-             tinh = document.getElementById('province').options[document.getElementById('province').selectedIndex].text;
-        }
-        if (document.getElementById('district').value) {
-             huyen = document.getElementById('district').value;
-        }
-        
-        let diaChiFull = huyen ? `${huyen}, ${tinh}` : tinh;
+        // Lấy địa chỉ ghép
+        let p = provinceInput.value;
+        let d = districtInput.value;
+        let diaChiFull = d ? `${d}, ${p}` : p;
 
-        // Thu thập dữ liệu
         const data = {
-            hoTen: document.getElementById('hoTen').value.toUpperCase(),
+            hoTen: document.getElementById('hoTen').value,
             ngaySinh: document.getElementById('ngaySinh').value,
-            
-            // Đảm bảo lấy đúng ID này
-            soCCCD: document.getElementById('soCCCD').value, 
-            
+            soCCCD: document.getElementById('soCCCD').value,
             sdt: document.getElementById('sdt').value,
+            honNhan: document.getElementById('honNhan').value,
             queQuan: diaChiFull,
-            
-            // Đảm bảo lấy đúng ID này
             phongBan: document.getElementById('phongBan').value,
-            
             viTri: document.getElementById('viTri').value,
             mucLuong: document.getElementById('mucLuong').value,
             kinhNghiem: document.getElementById('kinhNghiem').value,
-            honNhan: document.getElementById('honNhan').value,
-            
-            // Biến base64Image phải được khai báo và xử lý ở đoạn code xử lý ảnh phía trên
-            image: typeof base64Image !== 'undefined' ? base64Image : "" 
+            image: base64Image
         };
 
-        // Gửi đi
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -180,16 +259,18 @@
             body: JSON.stringify(data)
         })
         .then(() => {
-            alert("✅ Gửi thành công! Hãy kiểm tra Google Sheet.");
+            alert("✅ Đã gửi hồ sơ thành công!");
             btn.innerText = originalText;
             btn.disabled = false;
-            // window.location.reload(); // Bỏ comment dòng này để tự reload sau khi gửi
+            window.location.reload();
         })
         .catch(error => {
-            alert("Lỗi: " + error);
+            alert("❌ Lỗi gửi: " + error);
             btn.innerText = originalText;
             btn.disabled = false;
         });
     });
 </script>
 
+</body>
+</html>
